@@ -1,11 +1,11 @@
 name: Build and Push Containers
 
-# Trigger the workflow on push to main and feature_microservices branches
+# Trigger the workflow on push to main and feature_microservice branches
 on:
   push:
     branches:
       - main
-      - feature_microservices
+      - feature_microservice
 
 jobs:
   
