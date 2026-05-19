@@ -1,6 +1,6 @@
 name: Build and Push Containers
 
-# Trigger the workflow on push
+# Trigger the workflow on push to main and feature_microservices branches
 on:
   push:
     branches:
