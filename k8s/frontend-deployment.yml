@@ -21,8 +21,10 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: frontend-app:v1
-          imagePullPolicy: Never
+          #image: frontend-app:v1
+          #imagePullPolicy: Never
+          image: ghcr.io/kevigote/frontend-app:latest
+          imagePullPolicy: Always
 
           ports:
             - containerPort: 80

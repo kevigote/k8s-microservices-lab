@@ -1,0 +1,66 @@
+name: Build and Push Containers
+
+# Trigger the workflow on push
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  
+  build:
+    
+    # Github linux runner
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+
+      # Download repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Authenticate with GitHub Container Registry
+      - name: Authenticate with GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          
+          # GitHub registry URL
+          registry: ghcr.io
+
+          # Current GitHub user
+          username: ${{ github.actor }}
+
+          # Github auto-generated token for authentication
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      #========================================
+      # Backend Image
+      #========================================
+
+      # Build backend Docker image
+      - name: Build Backend Image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/backend-api:latest ./backend
+      
+      # Push backend Docker image to GitHub Container Registry
+      - name: Push Backend Image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/backend-api:latest
+      
+      #========================================
+      # Frontend Image
+      #========================================
+
+      # Build frontend Docker image
+      - name: Build Frontend Image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/frontend-app:latest ./frontend
+
+      # Push frontend Docker image to GitHub Container Registry
+      - name: Push Frontend Image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/frontend-app:latest
