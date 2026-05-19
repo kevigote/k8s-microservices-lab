@@ -12,7 +12,11 @@ jobs:
   build:
     
     # Github linux runner
-    runs-on: ubuntu-latest
+    runs-on: 
+      # - ubuntu-latest
+      - self-hosted
+      - windows
+      - minikube
 
     permissions:
       contents: read
@@ -65,3 +69,22 @@ jobs:
       - name: Push Frontend Image
         run: |
           docker push ghcr.io/${{ github.repository_owner }}/frontend-app:latest
+
+      #========================================
+      # Deploy Kubernetes Resources
+      #========================================
+      
+      # Deploy Kubernetes resources using kubectl
+      # Restart deployments to pull the latest images and check rollout status
+      # Finally, get the status of pods and ingress resources
+
+      - name: Deploy Kubernetes Resources
+        shell: powershell
+        run: |
+          kubectl apply -f k8s/
+          kubectl rollout restart deployment/backend-deployment
+          kubectl rollout restart deployment/frontend-deployment
+          kubectl rollout status deployment/backend-deployment
+          kubectl rollout status deployment/frontend-deployment
+          kubectl get pods
+          kubectl get ingress
