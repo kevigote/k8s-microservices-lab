@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kubernetes Microservices Lab - Frontend App</title> 
+</head>
+<body>
+    <h1>Welcome to the Kubernetes Microservices Lab!</h1>
+    <p>This is the frontend application. Click the button below to fetch a message from the backend API.</p>
+    <button onclick="loadMessage()">Get Backend Message
+</button>
+
+<h2 id="result"></h2>
+
+<script>
+    async function loadMessage() {
+        const response = await fetch(
+            '/api/message'
+        );
+
+        const data = await response.json();
+
+        document.getElementById('result').textContent = data.message;
+    }
+</script>
+
+</body>
+</html>
