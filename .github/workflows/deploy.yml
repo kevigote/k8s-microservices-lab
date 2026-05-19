@@ -28,6 +28,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Reset Docker context to Desktop deamon before building and pushing images to GitHub Container Registry
+      - name: Reset Docker Context
+        run: |
+          docker context use default
+
       # Authenticate with GitHub Container Registry
       - name: Authenticate with GitHub Container Registry
         uses: docker/login-action@v3
@@ -49,12 +54,12 @@ jobs:
       # Build backend Docker image
       - name: Build Backend Image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/backend-api:latest ./backend
+          docker build -t ghcr.io/${{ github.repository_owner }}/backend-api:${{ github.sha }} ./backend
       
       # Push backend Docker image to GitHub Container Registry
       - name: Push Backend Image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/backend-api:latest
+          docker push ghcr.io/${{ github.repository_owner }}/backend-api:${{ github.sha }}
       
       #========================================
       # Frontend Image
@@ -63,18 +68,19 @@ jobs:
       # Build frontend Docker image
       - name: Build Frontend Image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/frontend-app:latest ./frontend
+          docker build -t ghcr.io/${{ github.repository_owner }}/frontend-app:${{ github.sha }} ./frontend
 
       # Push frontend Docker image to GitHub Container Registry
       - name: Push Frontend Image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/frontend-app:latest
+          docker push ghcr.io/${{ github.repository_owner }}/frontend-app:${{ github.sha }}
 
       #========================================
       # Deploy Kubernetes Resources
       #========================================
       
       # Deploy Kubernetes resources using kubectl
+      # Update deployments to use the new registry images with the commit SHA tag
       # Restart deployments to pull the latest images and check rollout status
       # Finally, get the status of pods and ingress resources
 
@@ -82,6 +88,10 @@ jobs:
         shell: powershell
         run: |
           kubectl apply -f k8s/
+
+          kubectl set image deployment/backend-deployment backend=ghcr.io/${{ github.repository_owner }}/backend-api:${{ github.sha }}
+          kubectl set image deployment/frontend-deployment frontend=ghcr.io/${{ github.repository_owner }}/frontend-app:${{ github.sha }}
+
           kubectl rollout restart deployment/backend-deployment
           kubectl rollout restart deployment/frontend-deployment
           kubectl rollout status deployment/backend-deployment

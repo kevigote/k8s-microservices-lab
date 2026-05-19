@@ -19,6 +19,9 @@ spec:
         app: frontend
 
     spec:
+      # Credential for pulling images from GitHub Container Registry
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: frontend
           #image: frontend-app:v1
@@ -35,4 +38,4 @@ spec:
               memory: "128Mi"
             limits:
               cpu: "200m"
-              memory: "128Mi"
+              memory: "256Mi"
