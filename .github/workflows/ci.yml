@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for Kubernetes Microservices Lab
+name: CI Pipeline
 
 # Trigger the workflow on push to main and feature_microservice branches
 on:
@@ -88,39 +88,9 @@ jobs:
           docker push ghcr.io/${{ github.repository_owner }}/frontend-app:${{ github.sha }}
           docker push ghcr.io/${{ github.repository_owner }}/frontend-app:latest
 
-      #========================================
-      # Deploy Kubernetes Resources
-      #========================================
-      
-      # Verify connectivity to Kubernetes cluster and check cluster status, nodes, and kubectl version
-      - name: Verify Cluster
+    # Registry propagation safety    
+    # Wait for a short period to ensure that the pushed images are available in the registry before proceeding with deployment
+      - name: Wait Registry Sync
         shell: powershell
-        run: |
-          kubectl cluster-info
-          kubectl get nodes
-          kubectl version --short
-
-      # Deploy Kubernetes resources using kubectl
-      # Update deployments to use the new registry images with the commit SHA tag
-      # Restart deployments to pull the latest images and check rollout status
-      # Finally, get the status of pods and ingress resources
-      - name: Deploy Kubernetes Resources
-        shell: powershell
-        run: |
-          kubectl apply -f k8s/
-
-          kubectl set image deployment/backend-deployment `
-          backend=ghcr.io/${{ github.repository_owner }}/backend-api:${{ github.sha }}
-
-          kubectl set image deployment/frontend-deployment `
-          frontend=ghcr.io/${{ github.repository_owner }}/frontend-app:${{ github.sha }}
-
-          kubectl rollout status deployment/backend-deployment
-
-          kubectl rollout status deployment/frontend-deployment
-
-          kubectl get pods
-
-          kubectl get ingress
-
-          kubectl describe pod -l app=backend
+        run: | 
+          Start-Sleep -Seconds 10

@@ -1,22 +1,65 @@
 # Kubernetes Microservices Lab
 
-This project is a hands-on Kubernetes and Docker lab environment used to practice:
+Hands-on Kubernetes and DevOps lab environment built to practice real-world platform engineering concepts locally using Minikube.
+
+This repository evolves progressively from Docker fundamentals to Kubernetes automation and CI/CD practices.
+
+---
+
+# Concepts Practiced
+
+### Containerization
 
 - Docker multi-stage builds
-- Kubernetes Deployments
-- Kubernetes Services
+- Docker image tagging strategies
+- GitHub Container Registry (GHCR)
+- Docker context management
+
+### Kubernetes
+
+- Deployments
+- Services
+- ClusterIP networking
 - Internal DNS communication
 - NGINX reverse proxy
-- Ingress configuration
-- Frontend and backend microservices architecture
+- Ingress Controller
+- Secrets
+- ConfigMaps
+- Rollout strategies
+- Pod networking
+
+### DevOps / CI-CD
+
+- GitHub Actions
+- CI/CD separation
+- Self-hosted GitHub Runner
+- Image versioning using commit SHA
+- Automated Kubernetes deployments
+- Deployment validation
+- Cluster health verification
 
 ---
 
 # Architecture
 
 ```text
-Browser
+Developer
    ↓
+Git Push
+
+CI Pipeline
+(GitHub Actions)
+   ↓
+Docker Build
+   ↓
+GHCR Push
+
+CD Pipeline
+(GitHub Actions)
+   ↓
+Kubernetes Deployment
+   ↓
+
 Ingress Controller
    ↓
 frontend-service
@@ -26,6 +69,7 @@ Frontend Pod (NGINX)
 backend-service
    ↓
 Backend Pod (Node.js API)
+
 ```
 
 ---
@@ -35,10 +79,12 @@ Backend Pod (Node.js API)
 - Docker
 - Kubernetes
 - Minikube
+- GitHub Actions
+- GitHub Container Registry (GHCR)
 - NGINX
 - Node.js
 - Express.js
-- Ingress NGINX Controller
+- Self-hosted GitHub Runner
 
 ---
 
@@ -46,6 +92,11 @@ Backend Pod (Node.js API)
 
 ```text
 k8s-microservices-lab/
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── cd.yml
 │
 ├── backend/
 │   ├── Dockerfile
@@ -66,6 +117,7 @@ k8s-microservices-lab/
 │   └── frontend-ingress.yml
 │
 └── README.md
+
 ```
 
 ---
@@ -77,21 +129,28 @@ Install:
 - Docker Desktop
 - Minikube
 - kubectl
+- Git
 
 Verify installation:
 
 ```bash
 docker --version
+
 minikube version
+
 kubectl version --client
+
+git --version
 ```
 
 ---
 
-# Start Minikube
+# Start Local Cluster
+
+Start Minikube:
 
 ```bash
-minikube start
+minikube start --driver=docker
 ```
 
 Enable ingress:
@@ -100,79 +159,17 @@ Enable ingress:
 minikube addons enable ingress
 ```
 
----
-
-# Build Docker Images
-
-## Backend
+Verify:
 
 ```bash
-cd backend
-
-docker build -t backend-api:v1 .
-```
-
-## Frontend
-
-```bash
-cd frontend
-
-docker build -t frontend-app:v1 .
-```
-
----
-
-# Load Images into Minikube
-
-```bash
-minikube image load backend-api:v1
-
-minikube image load frontend-app:v1
-```
-
----
-
-# Deploy Kubernetes Resources
-
-```bash
-cd k8s
-
-kubectl apply -f .
-```
-
----
-
-# Verify Resources
-
-## Pods
-
-```bash
-kubectl get pods
-```
-
-## Services
-
-```bash
-kubectl get svc
-```
-
-## Ingress
-
-```bash
-kubectl get ingress
+kubectl get pods -n ingress-nginx
 ```
 
 ---
 
 # Configure Local Domain
 
-Get Minikube IP:
-
-```bash
-minikube ip
-```
-
-Edit hosts file:
+Edit:
 
 Windows:
 
@@ -183,34 +180,50 @@ C:\Windows\System32\drivers\etc\hosts
 Add:
 
 ```text
-<MINIKUBE_IP> myapp.local
+127.0.0.1 myapp.local
 ```
 
-Example:
+Verify:
 
-```text
-192.168.49.2 myapp.local
+```bash
+ping myapp.local
+```
+
+---
+
+# Deploy Kubernetes Resources
+
+```bash
+kubectl apply -f k8s/
+```
+
+Check:
+
+```bash
+kubectl get pods
+
+kubectl get svc
+
+kubectl get ingress
 ```
 
 ---
 
 # Access Application
 
-Open browser:
+Frontend:
 
 ```text
 http://myapp.local
 ```
 
----
-
-# Backend API Endpoint
+Backend:
 
 ```text
-/api/message
+http://myapp.local/api/message
 ```
 
-Example response:
+Example:
 
 ```json
 {
@@ -220,67 +233,107 @@ Example response:
 
 ---
 
-# Kubernetes Concepts Practiced
+# CI/CD Flow
 
-- Deployments
-- Services
-- ClusterIP
-- NodePort
-- Ingress
-- Internal DNS
-- Reverse Proxy
-- Pod Networking
-- Multi-stage Docker Builds
+## CI Pipeline
+
+Triggered on:
+
+- main
+- feature_microservice
+
+Stages:
+
+1. Checkout repository
+2. Validate Docker context
+3. Authenticate GHCR
+4. Build backend image
+5. Build frontend image
+6. Push images to GHCR
+
+---
+
+## CD Pipeline
+
+Triggered after CI success.
+
+Stages:
+
+1. Validate Kubernetes cluster
+2. Apply manifests
+3. Update image versions
+4. Verify rollout
+5. Validate ingress and pods
 
 ---
 
 # Troubleshooting
 
-## Check pods
+Check cluster:
+
+```bash
+kubectl cluster-info
+
+kubectl get nodes
+```
+
+Check pods:
 
 ```bash
 kubectl get pods
 ```
 
-## Check logs
+Check logs:
 
 ```bash
 kubectl logs <pod-name>
 ```
 
-## Check ingress
+Check ingress:
 
 ```bash
 kubectl describe ingress
 ```
 
-## Check services
+Check services:
 
 ```bash
 kubectl get svc
 ```
 
-## Check endpoints
+Check endpoints:
 
 ```bash
 kubectl get endpoints
+```
+
+Check rollout:
+
+```bash
+kubectl rollout status deployment/backend-deployment
+
+kubectl rollout status deployment/frontend-deployment
 ```
 
 ---
 
 # Future Improvements
 
-- Add ConfigMaps
-- Add Secrets
-- Add MongoDB/PostgreSQL
-- Add Helm charts
-- Add HTTPS/TLS
-- Add CI/CD pipelines
-- Add monitoring with Prometheus/Grafana
-- Add Horizontal Pod Autoscaler
+- Helm charts
+- ArgoCD GitOps
+- HTTPS / TLS
+- PostgreSQL integration
+- Horizontal Pod Autoscaler
+- Prometheus monitoring
+- Grafana dashboards
+- Canary deployments
+- Blue/Green deployments
+- Environment promotion (Dev → QA → Prod)
 
 ---
 
 # Learning Goals
 
-This project was created to practice real-world Kubernetes and DevOps concepts in a local Minikube environment.# k8s-microservices-lab
+This repository was built to practice production-oriented Kubernetes and DevOps workflows locally.
+
+The objective is to progressively evolve from container fundamentals toward platform engineering concepts.
