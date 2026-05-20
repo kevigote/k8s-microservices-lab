@@ -5,6 +5,7 @@
 </head>
 <body>
     <h1>Welcome to the Kubernetes Microservices Lab!</h1>
+    <h1>CI/CD Pipeline Successfully Automated, MOTHERFUCKER! 🚀</h1>
     <p>This is the frontend application. Click the button below to fetch a message from the backend API.</p>
     <button onclick="loadMessage()">Get Backend Message
 </button>
@@ -13,13 +14,23 @@
 
 <script>
     async function loadMessage() {
-        const response = await fetch(
-            '/api/message'
-        );
+        try{
+            const response = await fetch('/api/message');
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status}`
+                )
+        }
+
 
         const data = await response.json();
 
         document.getElementById('result').textContent = data.message;
+    }
+        catch (error) {
+            document.getElementById('result').textContent = `Backend unavailable: ${error.message}`
+        }
     }
 </script>
 
