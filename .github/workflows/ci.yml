@@ -32,8 +32,6 @@ jobs:
       - name: Reset Docker Context
         shell: powershell
         run: |
-          # Remove Minikube Docker variables
-
           Remove-Item Env:DOCKER_HOST `
           -ErrorAction SilentlyContinue
 
