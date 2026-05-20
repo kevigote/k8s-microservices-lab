@@ -30,9 +30,23 @@ jobs:
 
       # Reset Docker context to Desktop deamon before building and pushing images to GitHub Container Registry
       - name: Reset Docker Context
+        shell: powershell
         run: |
+          # Remove Minikube Docker variables
+
+          Remove-Item Env:DOCKER_HOST `
+          -ErrorAction SilentlyContinue
+
+          Remove-Item Env:DOCKER_TLS_VERIFY `
+          -ErrorAction SilentlyContinue
+
+          Remove-Item Env:DOCKER_CERT_PATH `
+          -ErrorAction SilentlyContinue
+
           docker context use default
+
           docker context ls
+
           docker version
 
       # Authenticate with GitHub Container Registry
