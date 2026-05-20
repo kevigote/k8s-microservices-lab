@@ -32,15 +32,6 @@ jobs:
       - name: Reset Docker Context
         shell: powershell
         run: |
-          Remove-Item Env:DOCKER_HOST `
-          -ErrorAction SilentlyContinue
-
-          Remove-Item Env:DOCKER_TLS_VERIFY `
-          -ErrorAction SilentlyContinue
-
-          Remove-Item Env:DOCKER_CERT_PATH `
-          -ErrorAction SilentlyContinue
-
           docker context use default
 
           docker context ls
