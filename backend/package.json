@@ -1,0 +1,9 @@
+{
+    "name": "backend-api",
+    "version": "1.0.0",
+    "description": "Backend API for Kubernetes Microservices Lab",
+    "main": "server.js",
+    "dependencies": {
+        "express": "^4.18.2"
+    }
+}
