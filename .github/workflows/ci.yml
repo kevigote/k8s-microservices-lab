@@ -16,6 +16,15 @@ jobs:
       - windows
       - minikube
 
+    env:
+      # Set environment variables for Docker image names and tags
+      BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/backend-api
+      FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/frontend-app
+      IMAGE_TAG: ${{ github.sha }}
+      DOCKER_HOST: ""
+      DOCKER_TLS_VERIFY: ""
+      DOCKER_CERT_PATH: ""
+
     permissions:
       contents: read
       packages: write
@@ -30,24 +39,17 @@ jobs:
       - name: Reset Docker Context
         shell: powershell
         run: |
-          $env:DOCKER_HOST = ""
-          $env:DOCKER_TLS_VERIFY = ""
-          $env:DOCKER_CERT_PATH = ""
           docker context use default
           docker context ls
           docker version
 
       # Authenticate with GitHub Container Registry
       - name: Authenticate with GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          
-          # GitHub registry URL
-          registry: ghcr.io
-          # Current GitHub user
-          username: ${{ github.actor }}
-          # Github auto-generated token for authentication
-          password: ${{ secrets.GITHUB_TOKEN }}
+        shell: powershell
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io `
+          --username ${{ github.actor }} `
+          --password-stdin
 
       #========================================
       # Backend Image
@@ -58,16 +60,16 @@ jobs:
         shell: powershell
         run: |
           docker build `
-          -t ghcr.io/${{ github.repository_owner }}/backend-api:${{ github.sha }} `
-          -t ghcr.io/${{ github.repository_owner }}/backend-api:latest `
+          -t "$env:BACKEND_IMAGE`:$env:IMAGE_TAG" `
+          -t "$env:BACKEND_IMAGE`:latest" `
           ./backend
       
       # Push backend Docker image to GitHub Container Registry
       - name: Push Backend Image
         shell: powershell
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/backend-api:${{ github.sha }}
-          docker push ghcr.io/${{ github.repository_owner }}/backend-api:latest
+          docker push "$env:BACKEND_IMAGE`:$env:IMAGE_TAG"
+          docker push "$env:BACKEND_IMAGE`:latest"
       
       #========================================
       # Frontend Image
@@ -78,12 +80,12 @@ jobs:
         shell: powershell
         run: |
           docker build `
-          -t ghcr.io/${{ github.repository_owner }}/frontend-app:${{ github.sha }} `
-          -t ghcr.io/${{ github.repository_owner }}/frontend-app:latest `
+          -t "$env:FRONTEND_IMAGE`:$env:IMAGE_TAG" `
+          -t "$env:FRONTEND_IMAGE`:latest" `
           ./frontend
       # Push frontend Docker image to GitHub Container Registry
       - name: Push Frontend Image
         shell: powershell
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/frontend-app:${{ github.sha }}
-          docker push ghcr.io/${{ github.repository_owner }}/frontend-app:latest
+          docker push "$env:FRONTEND_IMAGE`:$env:IMAGE_TAG"
+          docker push "$env:FRONTEND_IMAGE`:latest"
