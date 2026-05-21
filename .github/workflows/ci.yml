@@ -11,9 +11,7 @@ jobs:
   
   build:
     
-    # Github linux runner
     runs-on: 
-      # - ubuntu-latest
       - self-hosted
       - windows
       - minikube
@@ -32,10 +30,11 @@ jobs:
       - name: Reset Docker Context
         shell: powershell
         run: |
+          $env:DOCKER_HOST = ""
+          $env:DOCKER_TLS_VERIFY = ""
+          $env:DOCKER_CERT_PATH = ""
           docker context use default
-
           docker context ls
-
           docker version
 
       # Authenticate with GitHub Container Registry
@@ -45,10 +44,8 @@ jobs:
           
           # GitHub registry URL
           registry: ghcr.io
-
           # Current GitHub user
           username: ${{ github.actor }}
-
           # Github auto-generated token for authentication
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -90,10 +87,3 @@ jobs:
         run: |
           docker push ghcr.io/${{ github.repository_owner }}/frontend-app:${{ github.sha }}
           docker push ghcr.io/${{ github.repository_owner }}/frontend-app:latest
-
-    # Registry propagation safety    
-    # Wait for a short period to ensure that the pushed images are available in the registry before proceeding with deployment
-      - name: Wait Registry Sync
-        shell: powershell
-        run: | 
-          Start-Sleep -Seconds 10

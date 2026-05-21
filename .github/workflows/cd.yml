@@ -1,7 +1,6 @@
 name: CD Pipeline
 
 # Deploy ONLY after CI finishes
-
 on:
   workflow_run:
     workflows:
@@ -11,9 +10,7 @@ on:
 
 jobs:
   deploy:
-    if: >
-
-      github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success'
 
     runs-on:
       - self-hosted
@@ -27,50 +24,41 @@ jobs:
     steps:
 
       # Download repository code
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    ################################
-    # Cluster Validation
-    ################################
-    # Verify connectivity to Kubernetes cluster and check cluster status, nodes, and kubectl version  
-    - name: Verify Cluster
-      shell: powershell
-      run: |
+      ################################
+      # Cluster Validation
+      ################################
+      # Verify connectivity to Kubernetes cluster and check cluster status, nodes, and kubectl version  
+      - name: Verify Cluster
+        shell: powershell
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+          kubectl version
 
-        kubectl cluster-info
+      ################################
+      # Deploy
+      ################################
+      # Deploy Kubernetes resources using kubectl
+      # Update deployments to use the new registry images with the commit SHA tag
+      # Restart deployments to pull the latest images and check rollout status
+      # Finally, get the status of pods and ingress resources
+      - name: Deploy Kubernetes
+        shell: powershell
+        run: |
 
-        kubectl get nodes
+          kubectl apply -f k8s/
 
-        kubectl version --short
+          kubectl set image deployment/backend-deployment `
+          backend=ghcr.io/${{ github.repository_owner }}/backend-api:latest
 
-    ################################
-    # Deploy
-    ################################
-    # Deploy Kubernetes resources using kubectl
-    # Update deployments to use the new registry images with the commit SHA tag
-    # Restart deployments to pull the latest images and check rollout status
-    # Finally, get the status of pods and ingress resources
-    - name: Deploy Kubernetes
-      shell: powershell
-      run: |
+          kubectl set image deployment/frontend-deployment `
+          frontend=ghcr.io/${{ github.repository_owner }}/frontend-app:latest
 
-        kubectl apply -f k8s/
+          kubectl rollout status deployment/backend-deployment --timeout=120s
+          kubectl rollout status deployment/frontend-deployment --timeout=120s
 
-        kubectl set image deployment/backend-deployment `
-        backend=ghcr.io/${{ github.repository_owner }}/backend-api:${{ github.sha }}
-
-        kubectl set image deployment/frontend-deployment `
-        frontend=ghcr.io/${{ github.repository_owner }}/frontend-app:${{ github.sha }}
-
-        kubectl rollout status deployment/backend-deployment
-
-        kubectl rollout status deployment/frontend-deployment
-
-        kubectl get pods
-
-        kubectl get ingress
-
-        kubectl get pods --show-labels
-
-        kubectl describe pod -l app=backend
+          kubectl get pods -o wide
+          kubectl get ingress
