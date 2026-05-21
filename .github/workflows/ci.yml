@@ -43,28 +43,13 @@ jobs:
           docker context ls
           docker version
 
-      - name: Verify Registry Variables
-        shell: powershell
-        run: |
-          Write-Host "Actor: ${{ github.actor }}"
-          if ("${{ secrets.minikube-ghcr-pull }}" -eq "") {
-            Write-Host "minikube-ghcr-pull MISSING"
-          }else{
-            Write-Host "minikube-ghcr-pull FOUND"
-          }
-          if ("${{ secrets.ghcr-secret }}" -eq "") {
-            Write-Host "ghcr-secret MISSING"
-          }else{
-            Write-Host "ghcr-secret FOUND"
-          }
-
       # Authenticate with GitHub Container Registry
       - name: Authenticate with GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.minikube-ghcr-pull }}
+          password: ${{ secrets.GHCR_PAT }}
 
       #========================================
       # Backend Image
